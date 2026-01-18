@@ -8,7 +8,7 @@ import (
 
 // InstallService handles the full setup of the binary and the systemd daemon
 func InstallService() {
-	fmt.Println("[*] Setting up sentinex-X as a system service...")
+	fmt.Println("[*] Setting up sentinex as a system service...")
 
 	configDir := "/etc/sentinex"
 	binaryDestination := "/usr/local/bin/sentinex"
@@ -39,7 +39,7 @@ func InstallService() {
 
 	// 4. Define the service configuration
 	serviceFile := `[Unit]
-Description=sentinex-X Security Agent
+Description=sentinex Security Agent
 After=network.target
 
 [Service]
@@ -64,7 +64,7 @@ WantedBy=multi-user.target`
 	exec.Command("systemctl", "enable", "sentinex").Run()
 	exec.Command("systemctl", "start", "sentinex").Run()
 
-	fmt.Println("[+] sentinex-X service installed and started successfully.")
+	fmt.Println("[+] sentinex service installed and started successfully.")
 }
 
 // CreatesentinexUser prepares the specialized SSH user on Child nodes
