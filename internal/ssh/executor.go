@@ -145,8 +145,98 @@ func ExecuteRemoteMulti(targets []string, command string) {
 }
 
 /* =========================
-   OUTPUT STREAMING
+   CASCADING UPDATE
 ========================= */
+
+// UpdateAllChildren pushes the Jumpbox binary to all children without touching config
+func UpdateAllChildren() {
+	inv := loadInventory()
+	if len(inv.Hosts) == 0 {
+		fmt.Println("No hosts in inventory to update.")
+		return
+	}
+
+	// Read the already updated binary from the Jumpbox local disk
+	binaryData, err := os.ReadFile("/usr/local/bin/sentinex")
+	if err != nil {
+		fmt.Printf("[!] Error reading Jumpbox binary: %v\n", err)
+		return
+	}
+
+	fmt.Printf("[*] Starting cascading update for %d hosts...\n", len(inv.Hosts))
+
+	var wg sync.WaitGroup
+	for _, h := range inv.Hosts {
+		wg.Add(1)
+		go func(host HostEntry) {
+			defer wg.Done()
+
+			// Update command: 
+			// 1. Cat the stream into a new file
+			// 2. Move to bin folder (preserves permissions if possible)
+			// 3. Restart service. /etc/sentinex/ is NEVER touched.
+			updateCmd := "cat > /tmp/sentinex.new && sudo mv /tmp/sentinex.new /usr/local/bin/sentinex && sudo chmod +x /usr/local/bin/sentinex && sudo systemctl restart sentinex"
+
+			err := ExecuteRemoteWithInput(host.IP, updateCmd, binaryData)
+			if err != nil {
+				fmt.Printf("[%s] %sUpdate Failed%s: %v\n", host.Name, ColorRed, ColorReset, err)
+			} else {
+				fmt.Printf("[%s] %sUpdate Successful%s\n", host.Name, ColorGreen, ColorReset)
+			}
+		}(h)
+	}
+	wg.Wait()
+	fmt.Println("[+] Cascading update process finished.")
+}
+
+/* =========================
+   HELPERS
+========================= */
+
+// ExecuteRemoteWithInput allows sending file data (like a binary) over SSH stdin
+func ExecuteRemoteWithInput(targetIP, command string, input []byte) error {
+	keyBytes, err := os.ReadFile("/etc/sentinex/id_rsa")
+	if err != nil {
+		return fmt.Errorf("private key not found")
+	}
+
+	signer, _ := ssh.ParsePrivateKey(keyBytes)
+	config := &ssh.ClientConfig{
+		User:            "sentinex",
+		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         10 * time.Second,
+	}
+
+	client, err := ssh.Dial("tcp", targetIP+":22", config)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	// Connect stdin pipe to send binary data
+	stdin, err := session.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	err = session.Start(command)
+	if err != nil {
+		return err
+	}
+
+	// Write the binary data and close stdin so the command finishes
+	stdin.Write(input)
+	stdin.Close()
+
+	return session.Wait()
+}
 
 func streamOutput(target string, reader io.Reader) {
 	scanner := bufio.NewScanner(reader)
@@ -154,10 +244,6 @@ func streamOutput(target string, reader io.Reader) {
 		fmt.Printf("[%s] %s\n", target, scanner.Text())
 	}
 }
-
-/* =========================
-   INVENTORY + STATUS
-========================= */
 
 func ListHosts() {
 	inv := loadInventory()
@@ -201,10 +287,6 @@ func checkStatus(ip string) string {
 	return ColorGreen + "● Connected" + ColorReset
 }
 
-/* =========================
-   HELPERS
-========================= */
-
 func resolveTarget(target string) string {
 	inv := loadInventory()
 	for _, h := range inv.Hosts {
@@ -212,7 +294,7 @@ func resolveTarget(target string) string {
 			return h.IP
 		}
 	}
-	return target // assume raw IP
+	return target 
 }
 
 func loadInventory() Inventory {
