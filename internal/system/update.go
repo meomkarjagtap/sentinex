@@ -15,11 +15,11 @@ import (
 
 // The URL where your Developer Server hosts the latest compiled binary.
 // Replace with your actual server IP or domain.
-const UpdateURL = "http://your-dev-server-ip/downloads/sentinex"
+const UpdateURL = "http://your-dev-server-ip/downloads/neurader"
 
 // FetchAndUpgradeJumpbox downloads the new binary from your dev server.
 func FetchAndUpgradeJumpbox() error {
-	fmt.Printf("[*] Sentinex v2: Checking for updates from %s...\n", UpdateURL)
+	fmt.Printf("[*] neurader v2: Checking for updates from %s...\n", UpdateURL)
 
 	// 1. Initiate the download
 	resp, err := http.Get(UpdateURL)
@@ -35,7 +35,7 @@ func FetchAndUpgradeJumpbox() error {
 	// 2. Prepare a temporary path for the download
 	// We download to .tmp first to avoid "text file busy" errors 
 	// and to ensure we don't break the current running binary.
-	destPath := "/usr/local/bin/sentinex"
+	destPath := "/usr/local/bin/neurader"
 	tempPath := destPath + ".tmp"
 
 	out, err := os.OpenFile(tempPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
@@ -52,7 +52,7 @@ func FetchAndUpgradeJumpbox() error {
 
 	// 4. Atomic Swap
 	// os.Rename is atomic in Linux, meaning the old binary is replaced 
-	// by the new one instantly. This DOES NOT touch /etc/sentinex/ or hosts.yml.
+	// by the new one instantly. This DOES NOT touch /etc/neurader/ or hosts.yml.
 	err = os.Rename(tempPath, destPath)
 	if err != nil {
 		return fmt.Errorf("failed to swap binary: %v. (Are you running with sudo?)", err)
