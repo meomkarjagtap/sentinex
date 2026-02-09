@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
-	"sentinex/internal/api"
-	"sentinex/internal/ssh"
-	"sentinex/internal/system"
+	"neurader/internal/api"
+	"neurader/internal/ssh"
+	"neurader/internal/system"
 	"strings"
 )
 
@@ -21,13 +21,13 @@ func main() {
 
 	switch os.Args[1] {
 	case "version":
-		fmt.Printf("Sentinex Version: %s\n", Version)
+		fmt.Printf("neurader Version: %s\n", Version)
 
 	case "install":
 		runWizard()
 
 	case "upgrade":
-		fmt.Printf("🚀 Sentinex %s Global Upgrade\n", Version)
+		fmt.Printf("🚀 neurader %s Global Upgrade\n", Version)
 		fmt.Println("---------------------------------")
 		// 1. Jumpbox pulls new binary from your Dev Server
 		err := system.FetchAndUpgradeJumpbox()
@@ -40,7 +40,7 @@ func main() {
 		fmt.Println("\n✨ Global upgrade complete. All nodes are on the latest build.")
 
 	case "daemon":
-		fmt.Printf("[*] Sentinex Daemon %s is active...\n", Version)
+		fmt.Printf("[*] neurader Daemon %s is active...\n", Version)
 		api.StartRegistrationServer("9090")
 
 	case "pending":
@@ -58,7 +58,7 @@ func main() {
 
 	case "run":
 		if len(os.Args) < 4 {
-			fmt.Println("Usage: sentinex run <Alias/IP> \"command\"")
+			fmt.Println("Usage: neurader run <Alias/IP> \"command\"")
 			return
 		}
 		targets := strings.Split(os.Args[2], ",")
@@ -71,12 +71,12 @@ func main() {
 }
 
 func showHelp() {
-	fmt.Printf("Sentinex %s - Automation & Security Tool\n", Version)
-	fmt.Println("Usage: sentinex [version | upgrade | install | daemon | pending | accept <IP> | list | run <Alias/IP> <cmd>]")
+	fmt.Printf("neurader %s - Automation & Security Tool\n", Version)
+	fmt.Println("Usage: neurader [version | upgrade | install | daemon | pending | accept <IP> | list | run <Alias/IP> <cmd>]")
 }
 
 func runWizard() {
-	fmt.Printf("🛡️ Sentinex %s Setup Wizard\n", Version)
+	fmt.Printf("🛡️ neurader %s Setup Wizard\n", Version)
 	fmt.Println("---------------------------")
 	fmt.Println("1) Jumpbox (Manager Role)")
 	fmt.Println("2) Child   (Thin Agent Role)")
@@ -89,9 +89,9 @@ func runWizard() {
 		fmt.Println("[*] Configuring Jumpbox...")
 		ssh.GenerateMasterKeys()
 		
-		if _, err := os.Stat("/etc/sentinex/hosts.yml"); os.IsNotExist(err) {
-			os.MkdirAll("/etc/sentinex", 0755)
-			os.WriteFile("/etc/sentinex/hosts.yml", []byte("hosts: []\n"), 0644)
+		if _, err := os.Stat("/etc/neurader/hosts.yml"); os.IsNotExist(err) {
+			os.MkdirAll("/etc/neurader", 0755)
+			os.WriteFile("/etc/neurader/hosts.yml", []byte("hosts: []\n"), 0644)
 		}
 
 		system.InstallService()
@@ -99,7 +99,7 @@ func runWizard() {
 		
 	} else if choice == 2 {
 		fmt.Println("[*] Configuring Thin Agent...")
-		system.CreatesentinexUser() 
+		system.CreateneuraderUser() 
 		system.InstallService()
 
 		fmt.Print("Enter Jumpbox IP: ")
