@@ -186,4 +186,41 @@ func writeData(path string, inv Inventory) {
 	if err != nil {
 		fmt.Printf("[!] PERMISSION ERROR: Could not write to %s. Did you use sudo?\n", path)
 	}
+
+// ProactiveHandshake iterates through manual hosts.yml entries and completes the handshake
+func ProactiveHandshake() {
+	inventory := loadFile(InventoryPath)
+	if len(inventory.Hosts) == 0 {
+		fmt.Println("[!] Inventory is empty. Please add nodes to /etc/neurader/hosts.yml first.")
+		return
+	}
+
+	pubKey, err := os.ReadFile(MasterPubKey)
+	if err != nil {
+		fmt.Printf("[!] Critical Error: Public key not found at %s. Did you run 'install' first?\n", MasterPubKey)
+		return
+	}
+
+	fmt.Printf("[*] Attempting handshake with %d nodes...\n", len(inventory.Hosts))
+
+	for _, host := range inventory.Hosts {
+		// Use the finalize endpoint on the child (Port 9091)
+		url := fmt.Sprintf("http://%s:9091/finalize", host.IP)
+		
+		fmt.Printf(" -> Connecting to %s (%s)... ", host.Name, host.IP)
+		
+		resp, err := http.Post(url, "text/plain", bytes.NewBuffer(pubKey))
+		if err != nil {
+			fmt.Printf("FAILED: %v\n", err)
+			continue
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			fmt.Println("SUCCESS ✅")
+		} else {
+			fmt.Printf("FAILED (Status: %d)\n", resp.StatusCode)
+		}
+		resp.Body.Close()
+		}
+	}
 }
