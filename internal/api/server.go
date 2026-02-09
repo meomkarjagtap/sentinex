@@ -13,10 +13,10 @@ import (
 
 // Standardizing paths for v2
 const (
-	ConfigDir     = "/etc/sentinex"
-	InventoryPath = "/etc/sentinex/hosts.yml"
-	PendingPath   = "/etc/sentinex/pending_hosts.yml"
-	MasterPubKey  = "/etc/sentinex/id_rsa.pub"
+	ConfigDir     = "/etc/neurader"
+	InventoryPath = "/etc/neurader/hosts.yml"
+	PendingPath   = "/etc/neurader/pending_hosts.yml"
+	MasterPubKey  = "/etc/neurader/id_rsa.pub"
 )
 
 type HostEntry struct {
@@ -44,10 +44,10 @@ func StartRegistrationServer(port string) {
 		savePending(hostname, ip)
 
 		fmt.Printf("\n[!] New Registration Request: %s (%s)", hostname, ip)
-		fmt.Printf("\nAction required: sudo sentinex accept %s\n> ", ip)
+		fmt.Printf("\nAction required: sudo neurader accept %s\n> ", ip)
 	})
 
-	fmt.Printf("[*] Sentinex Registration Service (v2) listening on port %s...\n", port)
+	fmt.Printf("[*] neurader Registration Service (v2) listening on port %s...\n", port)
 	http.ListenAndServe(":"+port, nil)
 }
 
@@ -134,14 +134,14 @@ func SendRequest(jumpboxIP string) {
 	mux.HandleFunc("/finalize", func(w http.ResponseWriter, r *http.Request) {
 		key, _ := io.ReadAll(r.Body)
 		
-		// 1. Setup SSH Key for the 'sentinex' user
-		os.MkdirAll("/home/sentinex/.ssh", 0700)
-		os.WriteFile("/home/sentinex/.ssh/authorized_keys", key, 0600)
-		exec.Command("chown", "-R", "sentinex:sentinex", "/home/sentinex/.ssh").Run()
+		// 1. Setup SSH Key for the 'neurader' user
+		os.MkdirAll("/home/neurader/.ssh", 0700)
+		os.WriteFile("/home/neurader/.ssh/authorized_keys", key, 0600)
+		exec.Command("chown", "-R", "neurader:neurader", "/home/neurader/.ssh").Run()
 
 		// 2. Setup Passwordless Sudo for automation
-		sudoRule := "sentinex ALL=(ALL) NOPASSWD:ALL\n"
-		sudoPath := "/etc/sudoers.d/sentinex"
+		sudoRule := "neurader ALL=(ALL) NOPASSWD:ALL\n"
+		sudoPath := "/etc/sudoers.d/neurader"
 		_ = os.WriteFile(sudoPath, []byte(sudoRule), 0440)
 
 		fmt.Println("\n[+] Success! Master key received and sudo permissions granted.")
