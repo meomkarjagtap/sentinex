@@ -26,6 +26,10 @@ func main() {
 	case "install":
 		runWizard()
 
+	case "init":
+    	fmt.Println("🚀 Initializing Handshake with Inventory...")
+   		api.ProactiveHandshake()
+
 	case "upgrade":
 		fmt.Printf("🚀 neurader %s Global Upgrade\n", Version)
 		fmt.Println("---------------------------------")
