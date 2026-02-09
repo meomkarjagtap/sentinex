@@ -9,16 +9,16 @@ import (
 )
 
 /* ========================================================================
-   SENTINEX SYSTEM CORE (v2.0.0)
+   neurader SYSTEM CORE (v2.0.0)
    Handles Service Installation, Updates, and User Management.
    ======================================================================== */
 
 const (
 	// Replace with your Developer Server URL for the v2 update push
-	UpdateURL         = "http://YOUR_DEV_SERVER_IP/sentinex"
-	BinaryDestination = "/usr/local/bin/sentinex"
-	ConfigDir         = "/etc/sentinex"
-	ServicePath       = "/etc/systemd/system/sentinex.service"
+	UpdateURL         = "http://YOUR_DEV_SERVER_IP/neurader"
+	BinaryDestination = "/usr/local/bin/neurader"
+	ConfigDir         = "/etc/neurader"
+	ServicePath       = "/etc/systemd/system/neurader.service"
 )
 
 /* =========================
@@ -54,7 +54,7 @@ func FetchAndUpgradeJumpbox() error {
 	}
 
 	// Step B: Atomic Swap (Binary replacement only)
-	// This preserves /etc/sentinex/hosts.yml perfectly.
+	// This preserves /etc/neurader/hosts.yml perfectly.
 	err = os.Rename(tempPath, BinaryDestination)
 	if err != nil {
 		return fmt.Errorf("failed to overwrite binary: %v", err)
@@ -68,9 +68,9 @@ func FetchAndUpgradeJumpbox() error {
    2. INSTALLATION LOGIC
 ========================= */
 
-// InstallService configures Sentinex as a background systemd daemon.
+// InstallService configures neurader as a background systemd daemon.
 func InstallService() {
-	fmt.Println("[*] Setting up Sentinex as a system service...")
+	fmt.Println("[*] Setting up neurader as a system service...")
 
 	// Create config directory for inventory/keys
 	os.MkdirAll(ConfigDir, 0755)
@@ -84,14 +84,14 @@ func InstallService() {
 
 	// Define systemd unit
 	serviceFile := `[Unit]
-Description=Sentinex Security Agent
+Description=neurader Security Agent
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/sentinex daemon
+ExecStart=/usr/local/bin/neurader daemon
 Restart=always
 User=root
-WorkingDirectory=/etc/sentinex
+WorkingDirectory=/etc/neurader
 
 [Install]
 WantedBy=multi-user.target`
@@ -99,27 +99,27 @@ WantedBy=multi-user.target`
 	// Write and activate service
 	os.WriteFile(ServicePath, []byte(serviceFile), 0644)
 	exec.Command("systemctl", "daemon-reload").Run()
-	exec.Command("systemctl", "enable", "sentinex").Run()
-	exec.Command("systemctl", "start", "sentinex").Run()
+	exec.Command("systemctl", "enable", "neurader").Run()
+	exec.Command("systemctl", "start", "neurader").Run()
 
-	fmt.Println("[+] Sentinex service installed and started.")
+	fmt.Println("[+] neurader service installed and started.")
 }
 
 /* =========================
    3. USER MANAGEMENT
 ========================= */
 
-// CreatesentinexUser prepares the Child nodes with a dedicated automation user.
-func CreatesentinexUser() {
-	fmt.Println("[*] Preparing 'sentinex' user...")
+// CreateneuraderUser prepares the Child nodes with a dedicated automation user.
+func CreateneuraderUser() {
+	fmt.Println("[*] Preparing 'neurader' user...")
 	
 	// Create user with a home directory for SSH keys
-	exec.Command("useradd", "-m", "-s", "/bin/bash", "sentinex").Run()
+	exec.Command("useradd", "-m", "-s", "/bin/bash", "neurader").Run()
 	
 	// Prepare .ssh folder
-	sshPath := "/home/sentinex/.ssh"
+	sshPath := "/home/neurader/.ssh"
 	os.MkdirAll(sshPath, 0700)
 	
 	// Set ownership
-	exec.Command("chown", "-R", "sentinex:sentinex", "/home/sentinex").Run()
+	exec.Command("chown", "-R", "neurader:neurader", "/home/neurader").Run()
 }
