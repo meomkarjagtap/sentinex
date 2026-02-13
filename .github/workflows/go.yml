@@ -22,7 +22,10 @@ jobs:
         go-version: '1.20'
 
     - name: Build
-      run: go build -v /opt/hostedtoolcache/go/1.20.14/x64/src/cmd/neurader
+      run: go build -v ./cmd/neurader
+
+    - name: init
+      run: go mod init
 
     - name: Test
-      run: go test -v cmd/neurader
+      run: go test -v ./cmd/neurader
