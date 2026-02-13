@@ -138,50 +138,6 @@ func ExecuteRemoteMulti(targets []string, command string) {
 }
 
 /* =========================
-   v2 CASCADING UPGRADE
-========================= */
-
-func UpdateAllChildren() {
-	inv := loadInventory()
-	if len(inv.Hosts) == 0 {
-		fmt.Println("No hosts in inventory to update.")
-		return
-	}
-
-	// Read the already updated binary from the Jumpbox local disk
-	binaryData, err := os.ReadFile("/usr/local/bin/neurader")
-	if err != nil {
-		fmt.Printf("[!] Error reading Jumpbox binary: %v\n", err)
-		return
-	}
-
-	fmt.Printf("[*] Starting cascading update for %d hosts...\n", len(inv.Hosts))
-
-	var wg sync.WaitGroup
-	for _, h := range inv.Hosts {
-		wg.Add(1)
-		go func(host HostEntry) {
-			defer wg.Done()
-
-			// Update sequence:
-			// 1. Stream binary to /tmp
-			// 2. Move to /usr/local/bin (requires sudo)
-			// 3. Restart the systemd daemon to apply v2
-			updateCmd := "cat > /tmp/neurader.new && sudo mv /tmp/neurader.new /usr/local/bin/neurader && sudo chmod +x /usr/local/bin/neurader && sudo systemctl restart neurader"
-
-			err := ExecuteRemoteWithInput(host.IP, updateCmd, binaryData)
-			if err != nil {
-				fmt.Printf("[%s] %sUpdate Failed%s: %v\n", host.Name, ColorRed, ColorReset, err)
-			} else {
-				fmt.Printf("[%s] %sUpdate Successful%s\n", host.Name, ColorGreen, ColorReset)
-			}
-		}(h)
-	}
-	wg.Wait()
-	fmt.Println("[+] Cascading update process finished.")
-}
-
-/* =========================
    HELPERS & UTILS
 ========================= */
 
