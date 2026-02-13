@@ -187,8 +187,9 @@ func writeData(path string, inv Inventory) {
 	if err != nil {
 		fmt.Printf("[!] PERMISSION ERROR: Could not write to %s. Did you use sudo?\n", path)
 	}
+} // Added missing brace here
 
-// ProactiveHandshake iterates through manual hosts.yml entries and completes the handshake
+// ProactiveHandshake now correctly sits outside writeData
 func ProactiveHandshake() {
 	inventory := loadFile(InventoryPath)
 	if len(inventory.Hosts) == 0 {
