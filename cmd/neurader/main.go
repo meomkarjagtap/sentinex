@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
+
 	"neurader/internal/api"
 	"neurader/internal/ssh"
 	"neurader/internal/system"
-	"strings"
 )
 
 // Version 2.0.0 - Semantic Versioning
@@ -27,8 +28,8 @@ func main() {
 		runWizard()
 
 	case "init":
-    	fmt.Println("🚀 Initializing Handshake with Inventory...")
-   		api.ProactiveHandshake()
+		fmt.Println("🚀 Initializing Handshake with Inventory...")
+		api.ProactiveHandshake()
 
 	case "upgrade":
 		fmt.Printf("🚀 neurader %s Global Upgrade\n", Version)
@@ -83,7 +84,7 @@ func runWizard() {
 	fmt.Printf("🛡️ neurader %s Setup Wizard\n", Version)
 	fmt.Println("---------------------------")
 	fmt.Println("1) Jumpbox (Manager Role)")
-	fmt.Println("2) Child   (Thin Agent Role)")
+	fmt.Println("2) Child    (Thin Agent Role)")
 	fmt.Print("\nSelect Role [1-2]: ")
 
 	var choice int
